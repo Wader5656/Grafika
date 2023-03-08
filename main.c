@@ -43,6 +43,7 @@ int main() {
         "  gl_Position = vec4(vp,1.0);"
         "  outColor = vColor;"
         "}";
+    //Ugyan az mint a felette lévő, de szabadon lehet állítani, ezért csináltam 2 shadert
     const char* vertex_shader2 =
         "#version 410\n"
         "layout (location = 0) in vec3 vp;"
@@ -63,7 +64,7 @@ int main() {
         "void main () {"
         "  color = vec4(outColor,1.0);"
         "}";
-
+    //Ugyan az mint a felette lévő, de szabadon lehet állítani, ezért csináltam 2 shadert
     const char* fragment_shader2 =
         "#version 410\n"
         "in vec3 outColor;"
