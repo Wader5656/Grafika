@@ -1,0 +1,9 @@
+Feladat: 
+
+Tetszőleges pont körül forogjon, 3 mátrix kell neki.
+
+P-t kell forgatni O pont körül
+
+RZ(forgó mátrix)
+
+Könyv: Kovács Emőd Komputergrafika geometrikai alapok 
