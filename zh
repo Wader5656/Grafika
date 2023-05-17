@@ -1,0 +1,330 @@
+/******************************************************************************\
+| OpenGL 4 Example Code.                                                       |
+| Accompanies written series "Anton's OpenGL 4 Tutorials"                      |
+| Email: anton at antongerdelan dot net                                        |
+| First version 27 Jan 2014                                                    |
+| Dr Anton Gerdelan, Trinity College Dublin, Ireland.                          |
+| See individual libraries for separate legal notices                          |
+|******************************************************************************|
+| Matrices and Vectors                                                         |
+| Note: code discussed in previous tutorials is moved into gl_utils file       |
+| On Apple don't forget to uncomment the version number hint in start_gl()     |
+\******************************************************************************/
+#include "gl_utils.h"   // utility functions discussed in earlier tutorials
+#include <GL/glew.h>    // include GLEW and new version of GL on Windows
+#include <GLFW/glfw3.h> // GLFW helper library
+#include <assert.h>
+#include <math.h>
+#include <stdarg.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <time.h>
+#define GL_LOG_FILE "gl.log"
+
+// keep track of window size for things like the viewport and the mouse cursor
+int g_gl_width = 640;
+int g_gl_height = 640;
+GLFWwindow* g_window = NULL;
+
+int main() {
+    restart_gl_log();
+    // all the GLFW and GLEW start-up code is moved to here in gl_utils.cpp
+    start_gl();
+    // tell GL to only draw onto a pixel if the shape is closer to the viewer
+    glEnable(GL_DEPTH_TEST); // enable depth-testing
+    glDepthFunc(GL_LESS);    // depth-testing interprets a smaller value as "closer"
+
+    /* OTHER STUFF GOES HERE NEXT */
+    GLfloat points[] = { -0.25f, 0.0f, 0.0f, -0.125f, 0.5f, 0.0f, 0.125f, 0.5f, 0.0f,0.25f,0.0f,0.0f };
+    GLfloat colors[] = { 0.0f,1.0f,1.0f,1.0f,0.0f,1.0f ,1.0f,0.5f,0.5f ,0.0f,0.0f,1.0f };
+
+    GLfloat P1x = -0.25f;
+    GLfloat P1y = 0.0f;
+
+    GLfloat P2x = -0.125f;
+    GLfloat P2y = 0.5f;
+
+    GLfloat P3x = 0.125f;
+    GLfloat P3y = 0.5f;
+
+    GLfloat P4x = 0.25f;
+    GLfloat P4y = 0.0f;
+
+    GLfloat HermiteCurve[300];
+    GLfloat Hermitecolor[300];
+
+    GLfloat t;
+    GLint i;
+
+    GLfloat step = 3.0f / 99.0f; // t \in [-1,2]
+
+    GLuint vbo,vbo2,vbo3,vbo4, vao,vao2;
+
+
+
+    GLuint vert_shader2, frag_shader2;
+    GLuint shader_programme2;
+
+    HermiteCurve[0] = points[0];
+    HermiteCurve[1] = points[1];
+    HermiteCurve[2] = points[2];
+
+    for (i = 1; i < 100; i++) {
+        t = -1 + i * step;
+        HermiteCurve[i * 3] = points[0] * (-1.0f / 6.0f * t * t * t + 1.0f / 2.0f * t * t - 1.0f / 3.0f * t) + points[3] * (1.0f / 2.0f * t * t * t - t * t - 1.0f / 2.0f * t + 1) + points[6] * (-1.0f / 2.0f * t * t * t + 1.0f / 2.0f * t * t + t) + points[9] * (1.0f / 6.0f * t * t * t - 1.0f / 6.0f * t);
+        HermiteCurve[i * 3 + 1] = points[1] * (-1.0f / 6.0f * t * t * t + 1.0f / 2.0f * t * t - 1.0f / 3.0f * t) + points[4] * (1.0f / 2.0f * t * t * t - t * t - 1.0f / 2.0f * t + 1) + points[7] * (-1.0f / 2.0f * t * t * t + 1.0f / 2.0f * t * t + t) + points[10] * (1.0f / 6.0f * t * t * t - 1.0f / 6.0f * t);
+        HermiteCurve[i * 3 + 2] = 0.0f;
+    }
+
+    HermiteCurve[297] = points[9];
+    HermiteCurve[298] = points[10];
+    HermiteCurve[299] = points[11];
+
+    Hermitecolor[0] = 1.0f;
+    Hermitecolor[1] = 1.0f;
+    Hermitecolor[2] = 1.0f;
+
+    for (i = 1; i < 100; i++) {
+        t = -1 + i * step;
+        Hermitecolor[i * 3] = 1.0f;
+        Hermitecolor[i * 3 + 1] = 1.0f;
+        Hermitecolor[i * 3 + 2] = 0.0f;
+    }
+
+    Hermitecolor[297] = 1.0f;
+    Hermitecolor[298] = 1.0f;
+    Hermitecolor[299] = 0.0f;
+
+
+
+    glGenBuffers(1, &vbo);
+    glBindBuffer(GL_ARRAY_BUFFER, vbo);
+    glBufferData(GL_ARRAY_BUFFER, 300 * sizeof(GLfloat), HermiteCurve, GL_STATIC_DRAW);
+
+    glGenBuffers(1, &vbo4);
+    glBindBuffer(GL_ARRAY_BUFFER, vbo4);
+    glBufferData(GL_ARRAY_BUFFER, 300 * sizeof(GLfloat), Hermitecolor, GL_STATIC_DRAW);
+    
+    glGenBuffers(1, &vbo2);
+    glBindBuffer(GL_ARRAY_BUFFER, vbo2);
+    glBufferData(GL_ARRAY_BUFFER, 12 * sizeof(GLfloat), points, GL_STATIC_DRAW);
+    glGenBuffers(1, &vbo3);
+    glBindBuffer(GL_ARRAY_BUFFER, vbo3);
+    glBufferData(GL_ARRAY_BUFFER, 12 * sizeof(GLfloat), colors, GL_STATIC_DRAW);
+
+
+
+
+    glGenVertexArrays(1, &vao);
+    glBindVertexArray(vao);
+    glBindBuffer(GL_ARRAY_BUFFER, vbo);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, NULL);
+    glBindBuffer(GL_ARRAY_BUFFER, vbo4);
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, NULL);
+    glEnableVertexAttribArray(0);
+    glEnableVertexAttribArray(1);
+
+    glGenVertexArrays(1, &vao2);
+    glBindVertexArray(vao2);
+    glBindBuffer(GL_ARRAY_BUFFER, vbo2);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, NULL);
+    glBindBuffer(GL_ARRAY_BUFFER, vbo3);
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, NULL);
+    glEnableVertexAttribArray(0);
+    glEnableVertexAttribArray(1);
+
+
+    char vertex_shader[1024 * 256];
+    char fragment_shader[1024 * 256];
+    parse_file_into_str("test_vs.glsl", vertex_shader, 1024 * 256);
+    parse_file_into_str("test_fs.glsl", fragment_shader, 1024 * 256);
+
+    GLuint vs = glCreateShader(GL_VERTEX_SHADER);
+    const GLchar* p = (const GLchar*)vertex_shader;
+    glShaderSource(vs, 1, &p, NULL);
+    glCompileShader(vs);
+
+    GLuint vs2 = glCreateShader(GL_VERTEX_SHADER);
+    const GLchar* p2 = (const GLchar*)vertex_shader;
+    glShaderSource(vs2, 1, &p2, NULL);
+    glCompileShader(vs2);
+
+    // check for compile errors
+    int params = -1;
+    glGetShaderiv(vs, GL_COMPILE_STATUS, &params);
+    if (GL_TRUE != params) {
+        fprintf(stderr, "ERROR: GL shader index %i did not compile\n", vs);
+        print_shader_info_log(vs);
+        return 1; // or exit or something
+    }
+
+    GLuint fs = glCreateShader(GL_FRAGMENT_SHADER);
+    p = (const GLchar*)fragment_shader;
+    glShaderSource(fs, 1, &p, NULL);
+    glCompileShader(fs);
+
+    // check for compile errors
+    glGetShaderiv(fs, GL_COMPILE_STATUS, &params);
+    if (GL_TRUE != params) {
+        fprintf(stderr, "ERROR: GL shader index %i did not compile\n", fs);
+        print_shader_info_log(fs);
+        return 1; // or exit or something
+    }
+
+    GLuint shader_programme = glCreateProgram();
+    glAttachShader(shader_programme, fs);
+    glAttachShader(shader_programme, vs);
+    glLinkProgram(shader_programme);
+
+    glGetProgramiv(shader_programme, GL_LINK_STATUS, &params);
+    if (GL_TRUE != params) {
+        fprintf(stderr, "ERROR: could not link shader programme GL index %i\n", shader_programme);
+        print_programme_info_log(shader_programme);
+        return false;
+    }
+
+  
+
+
+    GLfloat matrix_e1[] = {
+      1.0f,
+      0.0f,
+      0.0f,
+      0.0f, // first column
+           0.0f,
+           1.0f,
+           0.0f,
+           0.0f, // second column
+               0.0f,
+               0.0f,
+               1.0f,
+               0.0f, // third column
+                    0.0f,
+                    0.0f,
+                    0.0f,
+                    1.0f  // fourth column
+    };
+    GLfloat matrix_e2[] = {
+       1.0f,
+       0.0f,
+       0.0f,
+       0.0f, // first column
+            0.0f,
+            1.0f,
+            0.0f,
+            0.0f, // second column
+                0.0f,
+                0.0f,
+                1.0f,
+                0.0f, // third column
+                     0.0f,
+                     0.0f,
+                     0.0f,
+                     1.0f  // fourth column
+    };
+
+    GLfloat matrix[] = {
+      1.0f,
+      0.0f,
+      0.0f,
+      0.0f, // first column
+           0.0f, 
+           1.0f,
+           0.0f,
+           0.0f, // second column
+               0.0f,
+               0.0f,
+               1.0f,
+               0.0f, // third column
+                    0.0f,
+                    0.0f,
+                    0.0f,
+                    1.0f  // fourth column
+            };
+
+    int matrix_location = glGetUniformLocation(shader_programme, "matrix");
+    glUseProgram(shader_programme);
+    glUniformMatrix4fv(matrix_location, 1, GL_FALSE, matrix);
+
+ 
+
+    int matrix_location_e1 = glGetUniformLocation(shader_programme, "matrix_e1");
+    glUseProgram(shader_programme);
+    glUniformMatrix4fv(matrix_location_e1, 1, GL_FALSE, matrix_e1);
+
+    int matrix_location_e2 = glGetUniformLocation(shader_programme, "matrix_e2");
+    glUseProgram(shader_programme);
+    glUniformMatrix4fv(matrix_location_e2, 1, GL_FALSE, matrix_e2);
+
+    //glEnable(GL_CULL_FACE); // cull face
+    //glCullFace(GL_BACK);    // cull back face
+    //glFrontFace(GL_CW);     // GL_CCW for counter clock-wise
+
+    float speed = 1.0f; // move at 1 unit per second
+    float last_position = 0.0f;
+
+    glPointSize(6.0f);
+    while (!glfwWindowShouldClose(g_window)) {
+        // add a timer for doing animation
+        static double previous_seconds = glfwGetTime();
+        double current_seconds = glfwGetTime();
+        double elapsed_seconds = current_seconds - previous_seconds;
+        previous_seconds = current_seconds;
+
+        _update_fps_counter(g_window);
+        // wipe the drawing surface clear
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        glViewport(0, 0, g_gl_width, g_gl_height);
+
+        //
+        // Note: this call is not necessary, but I like to do it anyway before any
+        // time that I call glDrawArrays() so I never use the wrong shader programme
+        glUseProgram(shader_programme);
+
+        // update the matrix
+        // - you could simplify this by just using sin(current_seconds)
+        GLfloat theta = elapsed_seconds * speed + last_position;
+        matrix[0] = cos(theta);
+        matrix[1] = sin(theta);
+        matrix[4] = -sin(theta);
+        matrix[5] = cos(theta);
+        //matrix[12] = elapsed_seconds * speed + last_position;
+
+        last_position = theta;
+        
+        matrix_e1[12] = 0.25f;
+        matrix_e1[13] = 0.0f;
+
+        matrix_e2[12] = -0.25f;
+        matrix_e2[13] = 0.0f;
+
+        //if (fabs(last_position) > 2.0) { speed = -speed; }
+        //
+        // Note: this call is related to the most recently 'used' shader programme
+        glUniformMatrix4fv(matrix_location, 1, GL_FALSE, matrix);
+        glUniformMatrix4fv(matrix_location_e1, 1, GL_FALSE, matrix_e1);
+        glUniformMatrix4fv(matrix_location_e2, 1, GL_FALSE, matrix_e2);
+
+        //
+        // Note: this call is not necessary, but I like to do it anyway before any
+        // time that I call glDrawArrays() so I never use the wrong vertex data
+        glBindVertexArray(vao2);
+        glDrawArrays(GL_POINTS, 0, 4);
+        glBindVertexArray(vao);
+        // draw points 0-3 from the currently bound VAO with current in-use shader
+        glDrawArrays(GL_LINE_STRIP, 0, 100);
+        
+ 
+       
+        // update other events like input handling
+        glfwPollEvents();
+        if (GLFW_PRESS == glfwGetKey(g_window, GLFW_KEY_ESCAPE)) { glfwSetWindowShouldClose(g_window, 1); }
+        // put the stuff we've been drawing onto the display
+        glfwSwapBuffers(g_window);
+    }
+
+    // close GL context and any other GLFW resources
+    glfwTerminate();
+    return 0;
+}
